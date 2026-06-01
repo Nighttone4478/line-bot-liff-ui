@@ -832,39 +832,148 @@
       return new Promise((resolve, reject) => {
         const callbackName = `__liffApiCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
         const script = document.createElement('script');
-        const timer = setTimeout(() => {
-          cleanup();
-          reject(new Error('API 逾時，請確認 Apps Script Web App 已部署為 Anyone 可存取。'));
-        }, timeoutMs || 25000);
+        const startedAt = Date.now();
+        const actualTimeoutMs = timeoutMs || 30000;
 
-        function cleanup() {
-          clearTimeout(timer);
-          try { delete window[callbackName]; } catch (err) { window[callbackName] = undefined; }
-          if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window[callbackName] = (data) => {
-          cleanup();
-          resolve(data);
-        };
+        const safePayload = payload || {};
+        const action = safePayload.action || 'UNKNOWN_ACTION';
 
         const query = new URLSearchParams({
           callback: callbackName,
-          payload: JSON.stringify(payload)
+          payload: JSON.stringify(safePayload)
         });
 
-        script.onerror = () => {
+        const requestUrl = `${apiUrl}?${query.toString()}`;
+
+        function maskToken(token) {
+          if (!token) return 'EMPTY';
+
+          const text = String(token);
+
+          if (text.length <= 16) {
+            return 'SHORT_TOKEN';
+          }
+
+          return `${text.slice(0, 8)}...${text.slice(-6)}`;
+        }
+
+        function compactPayload(value, maxLength = 1200) {
+          try {
+            const text = JSON.stringify(value, null, 2);
+
+            if (text.length > maxLength) {
+              return `${text.slice(0, maxLength)}\n...payload 過長，已省略`;
+            }
+
+            return text;
+          } catch (err) {
+            return String(value);
+          }
+        }
+
+        function buildDebugMessage(title, extraMessage) {
+          const accessToken = safePayload.accessToken || '';
+          const elapsedMs = Date.now() - startedAt;
+
+          return [
+            title,
+            '',
+            `message=${extraMessage || ''}`,
+            `action=${action}`,
+            `apiUrl=${apiUrl}`,
+            `timeoutMs=${actualTimeoutMs}`,
+            `elapsedMs=${elapsedMs}`,
+            `urlLength=${requestUrl.length}`,
+            `hasAccessToken=${Boolean(accessToken)}`,
+            `accessTokenPreview=${maskToken(accessToken)}`,
+            `time=${new Date().toISOString()}`,
+            '',
+            'payload=',
+            compactPayload(Object.assign({}, safePayload, {
+              accessToken: accessToken ? maskToken(accessToken) : ''
+            })),
+            '',
+            '可能原因：',
+            '1. Apps Script 後端執行太久',
+            '2. 後端錯誤沒有正常回傳 JSONP callback',
+            '3. JSONP URL 太長',
+            '4. LINE accessToken 驗證失敗或卡住',
+            '5. Google Sheet 寫入或重新讀取太慢',
+            '6. API URL 不是最新部署的 /exec'
+          ].join('\n');
+        }
+
+        let settled = false;
+
+        function cleanup() {
+          clearTimeout(timer);
+
+          try {
+            delete window[callbackName];
+          } catch (err) {
+            window[callbackName] = undefined;
+          }
+
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        }
+
+        const timer = setTimeout(() => {
+          if (settled) return;
+
+          settled = true;
+          cleanup();
+
           reject(new Error(
-            'API 載入失敗\n' +
-            'action=' + action + '\n' +
-            'API_URL=' + API_URL
+            buildDebugMessage('API 逾時', '指定時間內沒有收到 JSONP callback。')
+          ));
+        }, actualTimeoutMs);
+
+        window[callbackName] = (data) => {
+          if (settled) return;
+
+          settled = true;
+          cleanup();
+
+          if (!data) {
+            reject(new Error(
+              buildDebugMessage('API 回傳空資料', 'callback 有執行，但 data 是空的。')
+            ));
+            return;
+          }
+
+          if (data.ok === false) {
+            reject(new Error(
+              buildDebugMessage(
+                'API 回傳錯誤',
+                data.message || data.error || '未知錯誤'
+              ) +
+              '\n\nbackendError=' + (data.error || '') +
+              '\nbackendStack=' + (data.stack || '')
+            ));
+            return;
+          }
+
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          if (settled) return;
+
+          settled = true;
+          cleanup();
+
+          reject(new Error(
+            buildDebugMessage('API 載入失敗', 'script.onerror 被觸發，代表 JSONP script 沒有成功載入。')
           ));
         };
-        script.src = `${apiUrl}?${query.toString()}`;
+
+        script.src = requestUrl;
         document.body.appendChild(script);
       });
     }
-
+    
     function load(dateText, options = {}) {
       currentDateText = dateText || currentDateText || '';
       return apiRequest('getUiData', { dateText: currentDateText, forceRefresh: options.forceRefresh !== false }, options);
