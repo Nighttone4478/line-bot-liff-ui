@@ -1,0 +1,1230 @@
+<!doctype html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LINE 行程 Bot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7f4;
+      --surface: #ffffff;
+      --surface-2: #eef3f5;
+      --ink: #1d272b;
+      --muted: #66757d;
+      --line: #dbe3e5;
+      --accent: #0f766e;
+      --accent-soft: #e6f4f1;
+      --danger: #b42318;
+      --danger-soft: #fff1f0;
+      --shadow: 0 8px 20px rgba(29, 39, 43, 0.07);
+      --bottom-nav-height: 74px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 9px 12px;
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.danger {
+      border-color: #f3b4af;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    button.ghost {
+      background: var(--surface-2);
+      border-color: var(--surface-2);
+      color: var(--muted);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 9px 11px;
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    label span {
+      padding-left: 2px;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(245, 247, 244, 0.95);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .identity {
+      min-width: 0;
+    }
+
+    .identity h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .identity p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sync {
+      min-width: 62px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 5px 9px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 12px 18px;
+    }
+
+    .error {
+      display: none;
+      margin-bottom: 10px;
+      border: 1px solid #f3b4af;
+      border-radius: 8px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      padding: 10px 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .date-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .quick-row,
+    .button-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-row::-webkit-scrollbar,
+    .button-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-row button {
+      min-width: 68px;
+    }
+
+    .summary-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 0 -12px 12px;
+      padding: 0 12px 2px;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+    }
+
+    .summary-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .metric {
+      flex: 0 0 118px;
+      min-height: 68px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 11px;
+      scroll-snap-align: start;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .panel,
+    .row-card,
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      max-width: 58%;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 2px 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list,
+    .rows {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      box-shadow: none;
+      padding: 10px;
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-title {
+      font-weight: 650;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .item-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .item-actions button {
+      min-width: 52px;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .row-card {
+      box-shadow: none;
+      padding: 10px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 10;
+      height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(14px);
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav-inner {
+      max-width: 760px;
+      height: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .tab-button {
+      min-width: 0;
+      min-height: 54px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 6px 2px;
+      white-space: normal;
+    }
+
+    .tab-button strong,
+    .tab-button span {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .tab-button strong {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tab-button span {
+      font-size: 12px;
+      line-height: 1.1;
+    }
+
+    .tab-button.active {
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: flex-end;
+      background: rgba(29, 39, 43, 0.32);
+      padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(100%, 760px);
+      max-height: 88vh;
+      margin: 0 auto;
+      overflow: auto;
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 18px 48px rgba(29, 39, 43, 0.22);
+      padding: 14px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    @media (max-width: 430px) {
+      .date-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .item-actions button {
+        flex: 1;
+      }
+
+      .item-actions {
+        width: 100%;
+      }
+
+      .metric {
+        flex-basis: 106px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="identity">
+          <h1 id="pageTitle">行程</h1>
+          <p id="userName">載入中</p>
+        </div>
+        <div class="sync" id="statusText">同步中</div>
+      </div>
+    </header>
+
+    <main>
+      <div id="errorBox" class="error"></div>
+
+      <section class="date-strip">
+        <input id="dateInput" type="date" aria-label="日期">
+        <div class="quick-row">
+          <button type="button" data-shift="0">今天</button>
+          <button type="button" data-shift="1">明天</button>
+          <button type="button" id="refreshButton">重整</button>
+        </div>
+      </section>
+
+      <section class="summary-scroll" aria-label="摘要">
+        <div class="metric"><span>行程</span><strong id="metricSchedules">0</strong></div>
+        <div class="metric"><span>排程時間</span><strong id="metricDuration">0m</strong></div>
+        <div class="metric"><span>空檔</span><strong id="metricFree">0</strong></div>
+        <div class="metric"><span>代辦</span><strong id="metricTodos">0</strong></div>
+      </section>
+
+      <section class="tab-panel active" data-panel="schedule">
+        <div class="panel">
+          <div class="panel-head">
+            <h2 id="scheduleTitle">行程</h2>
+            <span class="badge" id="dayStatus">-</span>
+          </div>
+          <div class="list" id="scheduleList"></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="todo">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>代辦</h2>
+            <span class="badge" id="todoCount">0 筆</span>
+          </div>
+          <div class="list" id="todoList"></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="add">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>新增多筆行程</h2>
+            <button class="ghost" type="button" id="addScheduleRowButton">加一筆</button>
+          </div>
+          <form id="scheduleForm">
+            <div class="rows" id="scheduleRows"></div>
+            <div class="button-row" style="margin-top: 10px;">
+              <button class="primary" type="submit">新增行程</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>新增固定行程</h2>
+          </div>
+          <form id="weeklyForm" class="form-grid">
+            <label><span>星期</span><select id="weeklyWeekday">
+                <option value="一">週一</option>
+                <option value="二">週二</option>
+                <option value="三">週三</option>
+                <option value="四">週四</option>
+                <option value="五">週五</option>
+                <option value="六">週六</option>
+                <option value="日">週日</option>
+              </select></label>
+            <label><span>開始</span><input id="weeklyStart" type="text" inputmode="numeric" placeholder="0900"
+                required></label>
+            <label><span>結束</span><input id="weeklyEnd" type="text" inputmode="numeric" placeholder="1200"
+                required></label>
+            <label class="wide"><span>標題</span><input id="weeklyTitle" type="text" placeholder="物理課" required></label>
+            <button class="primary wide" type="submit">新增固定</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>新增多筆代辦</h2>
+          </div>
+          <form id="todoForm">
+            <textarea id="todoInput" placeholder="每行一筆代辦&#10;例如：&#10;買早餐&#10;交作業"></textarea>
+            <button class="primary" style="width: 100%; margin-top: 8px;" type="submit">新增代辦</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="weekly">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>固定行程</h2>
+          </div>
+          <div class="list" id="weeklyList"></div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主要導覽">
+      <div class="bottom-nav-inner">
+        <button class="tab-button active" type="button" data-tab="schedule"><strong>日</strong><span>行程</span></button>
+        <button class="tab-button" type="button" data-tab="todo"><strong>待</strong><span>代辦</span></button>
+        <button class="tab-button" type="button" data-tab="add"><strong>＋</strong><span>新增</span></button>
+        <button class="tab-button" type="button" data-tab="weekly"><strong>週</strong><span>固定</span></button>
+      </div>
+    </nav>
+  </div>
+
+  <div class="modal" id="editModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="editTitle">修改行程</h2>
+        <button class="ghost" type="button" id="closeEditButton">關閉</button>
+      </div>
+      <form id="editForm" class="form-grid">
+        <input id="editId" type="hidden">
+        <input id="editType" type="hidden">
+        <label id="editDateWrap"><span>日期</span><input id="editDate" type="date"></label>
+        <label id="editWeekdayWrap"><span>星期</span><select id="editWeekday">
+            <option value="一">週一</option>
+            <option value="二">週二</option>
+            <option value="三">週三</option>
+            <option value="四">週四</option>
+            <option value="五">週五</option>
+            <option value="六">週六</option>
+            <option value="日">週日</option>
+          </select></label>
+        <label><span>開始</span><input id="editStart" type="text" inputmode="numeric" placeholder="0900" required></label>
+        <label><span>結束</span><input id="editEnd" type="text" inputmode="numeric" placeholder="1200" required></label>
+        <label class="wide"><span>標題</span><input id="editName" type="text" required></label>
+        <button class="primary wide" type="submit">儲存修改</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const TOKEN = <?!= JSON.stringify(initialToken) ?>;
+    const LIFF_ID = <?!= JSON.stringify(liffId) ?>;
+    const INITIAL_TAB = <?!= JSON.stringify(initialTab) ?>;
+    const WEB_APP_URL = <?!= JSON.stringify(webAppUrl) ?>;
+    const TAB_TITLES = {
+      schedule: '行程',
+      todo: '代辦',
+      add: '新增',
+      weekly: '固定'
+    };
+
+    let currentDateText = '';
+    let activeTab = 'schedule';
+    let isBusy = false;
+    let latestData = null;
+    let authMode = TOKEN ? 'token' : 'liff';
+    let lineAccessToken = '';
+    let storageKey = `line_bot_ui_${TOKEN || 'liff_pending'}`;
+
+    const $ = (id) => document.getElementById(id);
+
+    function setBusy(value, text) {
+      isBusy = value;
+      document.querySelectorAll('button').forEach((button) => {
+        if (button.classList.contains('tab-button')) return;
+        button.disabled = value;
+      });
+      $('statusText').textContent = text || (value ? '更新中' : '已同步');
+    }
+
+    function showError(message) {
+      const box = $('errorBox');
+      box.textContent = message || '';
+      box.classList.toggle('show', Boolean(message));
+    }
+
+    function showAuthStage(message) {
+      $('userName').textContent = message;
+      $('statusText').textContent = '登入中';
+    }
+
+    function toInputDate(dateText) {
+      return String(dateText || '').replaceAll('/', '-');
+    }
+
+    function toDateText(inputDate) {
+      return String(inputDate || '').replaceAll('-', '/');
+    }
+
+    function shiftedDate(days) {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}/${month}/${day}`;
+    }
+
+    function compactTime(timeText) {
+      return String(timeText || '').replace(':', '');
+    }
+
+    function weekdayValue(value) {
+      const map = ['日', '一', '二', '三', '四', '五', '六'];
+      return map[Number(value)] || value || '一';
+    }
+
+    function switchTab(tabName) {
+      if (!TAB_TITLES[tabName]) return;
+
+      activeTab = tabName;
+      document.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.panel === tabName);
+      });
+      document.querySelectorAll('.tab-button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+      });
+      $('pageTitle').textContent = TAB_TITLES[tabName] || '行程';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function saveLocalData(data) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({
+          savedAt: Date.now(),
+          data
+        }));
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function loadLocalData() {
+      try {
+        const text = localStorage.getItem(storageKey);
+        if (!text) return null;
+
+        const parsed = JSON.parse(text);
+        return parsed && parsed.data ? parsed.data : null;
+      } catch (err) {
+        console.warn(err);
+        return null;
+      }
+    }
+
+    function callServer(method, args, options = {}) {
+      setBusy(true, options.background ? '同步中' : undefined);
+
+      if (!options.background) {
+        showError('');
+      }
+
+      let actualMethod = method;
+      let actualArgs = args || [];
+
+      if (authMode === 'liff') {
+        actualMethod = `${method}ByLineAccessToken`;
+
+        if (!lineAccessToken) {
+          showError('LINE 登入資料不存在，請關閉頁面後從 LINE 圖文選單重新開啟。');
+          setBusy(false, '未連線');
+          return Promise.resolve(false);
+        }
+
+        actualArgs = [lineAccessToken].concat((args || []).slice(1));
+      }
+
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)[actualMethod](...actualArgs);
+      }).then((data) => {
+        if (data && data.conflict) return data;
+
+        if (data && data.ok) {
+          render(data);
+          saveLocalData(data);
+        }
+
+        return data || true;
+      }).catch((err) => {
+        showError(err && err.message ? err.message : String(err));
+        return false;
+      }).finally(() => {
+        setBusy(false, '已同步');
+      });
+    }
+
+    function load(dateText, options = {}) {
+      currentDateText = dateText || currentDateText || '';
+      const forceRefresh = options.forceRefresh !== false;
+      return callServer('getUiData', [TOKEN, currentDateText, forceRefresh], options);
+    }
+
+    function readInitialTab() {
+      const params = new URLSearchParams(window.location.search);
+      const directTab = params.get('tab') || INITIAL_TAB;
+
+      if (directTab) return directTab;
+
+      const liffState = params.get('liff.state');
+      if (!liffState) return '';
+
+      try {
+        const state = decodeURIComponent(liffState);
+        const query = state.startsWith('?')
+          ? state.slice(1)
+          : (state.includes('?') ? state.split('?').pop() : state);
+        return new URLSearchParams(query).get('tab') || '';
+      } catch (err) {
+        console.warn(err);
+        return '';
+      }
+    }
+
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          window.setTimeout(() => reject(new Error(message)), ms);
+        })
+      ]);
+    }
+
+    function currentUrlDiagnostic() {
+      return [
+        `目前網址：${window.location.origin}${window.location.pathname}`,
+        `Web app URL：${WEB_APP_URL || '未設定'}`,
+        `LIFF_ID：${LIFF_ID || '未設定'}`
+      ].join('\n');
+    }
+
+    async function initializeAuth() {
+      if (TOKEN) {
+        authMode = 'token';
+        showAuthStage('已使用專屬連結登入');
+        setBusy(false, '已連線');
+        return true;
+      }
+
+      authMode = 'liff';
+
+      if (!LIFF_ID) {
+        showError('尚未設定 LIFF_ID，請先在 Apps Script Script Properties 加入 LIFF_ID。');
+        setBusy(false, '未連線');
+        return false;
+      }
+
+      if (!window.liff) {
+        showError('LIFF SDK 載入失敗，請關閉頁面後從 LINE 圖文選單重新開啟。');
+        setBusy(false, '未連線');
+        return false;
+      }
+
+      try {
+        setBusy(true, '登入中');
+        showAuthStage('LIFF 初始化中');
+
+        await withTimeout(
+          liff.init({
+            liffId: LIFF_ID,
+            withLoginOnExternalBrowser: true
+          }),
+          10000,
+          `LIFF 初始化逾時。\n${currentUrlDiagnostic()}`
+        );
+
+        if (!liff.isLoggedIn()) {
+          setBusy(false, '等待授權');
+          showError('正在前往 LINE 授權頁。授權完成後會自動同步 Sheet 資料。');
+
+          liff.login({
+            redirectUri: buildLiffRedirectUrl()
+          });
+
+          return false;
+        }
+
+        lineAccessToken = liff.getAccessToken();
+
+        if (!lineAccessToken) {
+          throw new Error('無法取得 LINE access token，請重新開啟 LIFF。');
+        }
+
+        storageKey = `line_bot_ui_liff_${LIFF_ID}`;
+        showAuthStage('LINE 已登入，正在檢查 Sheet');
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            showError(
+              'DEBUG SHEET\n' +
+              JSON.stringify(res, null, 2)
+            );
+          })
+          .withFailureHandler((err) => {
+            showError('DEBUG ERROR\n' + (err && err.message ? err.message : String(err)));
+          })
+          .debugSheetStatusByLineAccessToken(lineAccessToken);
+
+        setBusy(false, '已連線');
+
+        return true;
+      } catch (err) {
+        showError(`${err && err.message ? err.message : String(err)}\n請關閉頁面後從 LINE 圖文選單重新開啟。`);
+        setBusy(false, '未連線');
+        return false;
+      }
+    }
+
+    function buildLiffRedirectUrl() {
+      const baseUrl = WEB_APP_URL || `${window.location.origin}${window.location.pathname}`;
+      const tab = readInitialTab();
+
+      if (!tab) return baseUrl;
+
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${separator}tab=${encodeURIComponent(tab)}`;
+    }
+
+    function render(data) {
+      if (!data || !data.ok) return;
+
+      latestData = data;
+      currentDateText = data.dateText;
+      $('dateInput').value = toInputDate(data.dateText);
+      $('userName').textContent = `${data.user.displayName}｜${data.dateText}（${data.weekdayText}）`;
+      $('metricSchedules').textContent = data.summary.scheduleCount;
+      $('metricDuration').textContent = data.summary.totalDurationText;
+      $('metricFree').textContent = data.summary.freeBlockCount;
+      $('metricTodos').textContent = data.summary.todoCount;
+      $('dayStatus').textContent = data.status || '-';
+      $('scheduleTitle').textContent = `行程｜${data.dateText}`;
+      $('todoCount').textContent = `${data.todos.length} 筆`;
+
+      renderSchedules(data.schedules || []);
+      renderTodos(data.todos || []);
+      renderWeekly(data.weekly || []);
+    }
+
+    function renderSchedules(schedules) {
+      const list = $('scheduleList');
+      list.innerHTML = '';
+
+      if (schedules.length === 0) {
+        list.innerHTML = '<div class="empty">這天沒有行程</div>';
+        return;
+      }
+
+      schedules.forEach((schedule) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = `
+          <div class="item-main">
+            <div class="item-title">${escapeHtml(schedule.title)}</div>
+            <div class="item-meta">${escapeHtml(schedule.startTime)}-${escapeHtml(schedule.endTime)}｜${schedule.type === 'WEEKLY' ? '固定' : '單日'}</div>
+          </div>
+          <div class="item-actions"></div>
+        `;
+
+        const actions = item.querySelector('.item-actions');
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.textContent = '修改';
+        editButton.addEventListener('click', () => openEditModal(schedule));
+        actions.appendChild(editButton);
+
+        if (schedule.type === 'ONCE') {
+          const cancelButton = document.createElement('button');
+          cancelButton.className = 'danger';
+          cancelButton.type = 'button';
+          cancelButton.textContent = '取消';
+          cancelButton.addEventListener('click', () => {
+            if (isBusy) return;
+            callServer('uiCancelSchedule', [TOKEN, schedule.id, currentDateText]);
+          });
+          actions.appendChild(cancelButton);
+        }
+
+        list.appendChild(item);
+      });
+    }
+
+    function renderTodos(todos) {
+      const list = $('todoList');
+      list.innerHTML = '';
+
+      if (todos.length === 0) {
+        list.innerHTML = '<div class="empty">目前沒有未完成代辦</div>';
+        return;
+      }
+
+      todos.forEach((todo) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = `
+          <div class="item-main">
+            <div class="item-title">${todo.number}. ${escapeHtml(todo.text)}</div>
+            <div class="item-meta">${escapeHtml(todo.createdAt)}</div>
+          </div>
+          <div class="item-actions"></div>
+        `;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = '完成';
+        button.addEventListener('click', () => {
+          if (isBusy) return;
+          callServer('uiFinishTodo', [TOKEN, todo.id, currentDateText]);
+        });
+        item.querySelector('.item-actions').appendChild(button);
+        list.appendChild(item);
+      });
+    }
+
+    function renderWeekly(weekly) {
+      const list = $('weeklyList');
+      list.innerHTML = '';
+
+      if (weekly.length === 0) {
+        list.innerHTML = '<div class="empty">目前沒有固定行程</div>';
+        return;
+      }
+
+      weekly.forEach((schedule) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = `
+          <div class="item-main">
+            <div class="item-title">${escapeHtml(schedule.title)}</div>
+            <div class="item-meta">週${escapeHtml(schedule.weekdayText)}｜${escapeHtml(schedule.startTime)}-${escapeHtml(schedule.endTime)}</div>
+          </div>
+          <div class="item-actions"></div>
+        `;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = '修改';
+        button.addEventListener('click', () => openEditModal(Object.assign({}, schedule, { type: 'WEEKLY' })));
+        item.querySelector('.item-actions').appendChild(button);
+        list.appendChild(item);
+      });
+    }
+
+    function addScheduleRow(values = {}) {
+      const row = document.createElement('div');
+      row.className = 'row-card';
+      row.innerHTML = `
+        <div class="form-grid">
+          <label><span>日期</span><input class="schedule-date" type="date" value="${escapeHtml(values.date || toInputDate(currentDateText))}"></label>
+          <label><span>開始</span><input class="schedule-start" type="text" inputmode="numeric" placeholder="0900" value="${escapeHtml(values.startTime || '')}" required></label>
+          <label><span>結束</span><input class="schedule-end" type="text" inputmode="numeric" placeholder="1200" value="${escapeHtml(values.endTime || '')}" required></label>
+          <label class="wide"><span>標題</span><input class="schedule-title" type="text" placeholder="上班" value="${escapeHtml(values.title || '')}" required></label>
+          <button class="ghost wide remove-row" type="button">移除此筆</button>
+        </div>
+      `;
+      row.querySelector('.remove-row').addEventListener('click', () => {
+        if ($('scheduleRows').children.length > 1) row.remove();
+      });
+      $('scheduleRows').appendChild(row);
+    }
+
+    function collectScheduleRows() {
+      return Array.from(document.querySelectorAll('#scheduleRows .row-card')).map((row) => ({
+        date: toDateText(row.querySelector('.schedule-date').value),
+        startTime: row.querySelector('.schedule-start').value,
+        endTime: row.querySelector('.schedule-end').value,
+        title: row.querySelector('.schedule-title').value
+      }));
+    }
+
+    function resetScheduleRows() {
+      $('scheduleRows').innerHTML = '';
+      addScheduleRow();
+    }
+
+    function conflictText(conflictResponse) {
+      const lines = [conflictResponse.message || '有時間重疊，是否仍要繼續？', ''];
+      (conflictResponse.conflicts || []).slice(0, 8).forEach((item) => {
+        lines.push(`第 ${item.index} 筆：${item.newSchedule}`);
+        lines.push(`重疊：${item.existingSchedule}`);
+        lines.push('');
+      });
+      return lines.join('\n').trim();
+    }
+
+    function openEditModal(schedule) {
+      $('editId').value = schedule.id;
+      $('editType').value = schedule.type;
+      $('editTitle').textContent = schedule.type === 'WEEKLY' ? '修改固定行程' : '修改行程';
+      $('editStart').value = compactTime(schedule.startTime);
+      $('editEnd').value = compactTime(schedule.endTime);
+      $('editName').value = schedule.title || '';
+
+      const isWeekly = schedule.type === 'WEEKLY';
+      $('editDateWrap').style.display = isWeekly ? 'none' : 'grid';
+      $('editWeekdayWrap').style.display = isWeekly ? 'grid' : 'none';
+      $('editDate').value = toInputDate(schedule.date || currentDateText);
+      $('editWeekday').value = weekdayValue(schedule.weekday);
+      $('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      $('editModal').classList.remove('show');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isAuthed = await initializeAuth();
+      if (!isAuthed) return;
+
+      document.querySelectorAll('.tab-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (button.dataset.tab) switchTab(button.dataset.tab);
+        });
+      });
+
+      document.querySelectorAll('[data-shift]').forEach((button) => {
+        button.addEventListener('click', () => {
+          load(shiftedDate(Number(button.dataset.shift)));
+        });
+      });
+
+      $('refreshButton').addEventListener('click', () => load(currentDateText));
+      $('dateInput').addEventListener('change', (event) => load(toDateText(event.target.value)));
+      $('addScheduleRowButton').addEventListener('click', () => addScheduleRow());
+      $('closeEditButton').addEventListener('click', closeEditModal);
+      $('editModal').addEventListener('click', (event) => {
+        if (event.target === $('editModal')) closeEditModal();
+      });
+
+      $('todoForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const input = $('todoInput');
+        callServer('uiAddTodos', [TOKEN, input.value, currentDateText]).then((data) => {
+          if (!data || data.conflict) return;
+          input.value = '';
+          switchTab('todo');
+        });
+      });
+
+      $('scheduleForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const rows = collectScheduleRows();
+        const result = await callServer('uiAddSchedules', [TOKEN, rows, false]);
+
+        if (result && result.conflict) {
+          const confirmed = window.confirm(conflictText(result));
+          if (!confirmed) return;
+          const forced = await callServer('uiAddSchedules', [TOKEN, rows, true]);
+          if (!forced || forced.conflict) return;
+        } else if (!result) {
+          return;
+        }
+
+        resetScheduleRows();
+        switchTab('schedule');
+      });
+
+      $('weeklyForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        callServer('uiAddWeeklySchedule', [
+          TOKEN,
+          $('weeklyWeekday').value,
+          $('weeklyStart').value,
+          $('weeklyEnd').value,
+          $('weeklyTitle').value
+        ]).then((data) => {
+          if (!data || data.conflict) return;
+          $('weeklyStart').value = '';
+          $('weeklyEnd').value = '';
+          $('weeklyTitle').value = '';
+          switchTab('weekly');
+        });
+      });
+
+      $('editForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const type = $('editType').value;
+        const payload = {
+          type,
+          date: toDateText($('editDate').value),
+          weekday: $('editWeekday').value,
+          startTime: $('editStart').value,
+          endTime: $('editEnd').value,
+          title: $('editName').value
+        };
+        const args = [TOKEN, $('editId').value, payload, false];
+        const result = await callServer('uiUpdateSchedule', args);
+
+        if (result && result.conflict) {
+          const confirmed = window.confirm(conflictText(result));
+          if (!confirmed) return;
+          const forced = await callServer('uiUpdateSchedule', [TOKEN, $('editId').value, payload, true]);
+          if (!forced || forced.conflict) return;
+        } else if (!result) {
+          return;
+        }
+
+        closeEditModal();
+        switchTab(type === 'WEEKLY' ? 'weekly' : 'schedule');
+      });
+
+      resetScheduleRows();
+
+      const initialTab = readInitialTab();
+      if (initialTab) switchTab(initialTab);
+
+      const cached = loadLocalData();
+      if (cached) {
+        render(cached);
+        setBusy(false, '同步中');
+        load(cached.dateText, {
+          background: true,
+          forceRefresh: true
+        });
+      } else {
+        load('', {
+          forceRefresh: true
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
