@@ -105,6 +105,21 @@
     .modal-card { width: min(100%,760px); max-height: 88vh; margin: 0 auto; overflow: auto; border-radius: 12px; background: var(--surface); box-shadow: 0 18px 48px rgba(29,39,43,.22); padding: 14px; }
     .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
     .modal-head h2 { margin: 0; font-size: 17px; }
+
+    .mobile-actions { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .todo-toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .checkline { display: inline-flex; grid-auto-flow: column; grid-template-columns: auto auto; align-items: center; gap: 7px; min-height: 44px; color: var(--muted); font-size: 14px; }
+    .checkline input, .todo-check { width: 20px; min-height: 20px; height: 20px; accent-color: var(--accent); }
+    .todo-item { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+    .todo-item .item-main { padding-top: 1px; }
+    .todo-finish-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .todo-finish-bar button { min-width: 112px; }
+    .schedule-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hidden { display: none !important; }
+    .todo-input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+    .todo-input-row button { min-width: 52px; }
+    .form-hint { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
     @media (max-width: 430px) {
       .date-strip { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
@@ -112,6 +127,13 @@
       .item-actions, .item-actions button { width: 100%; }
       .item-actions button { flex: 1; }
       .metric { flex-basis: 106px; }
+      main { padding-left: 10px; padding-right: 10px; }
+      .panel { padding: 11px; }
+      .todo-toolbar, .todo-finish-bar { align-items: stretch; }
+      .todo-finish-bar { flex-direction: column; }
+      .todo-finish-bar button { width: 100%; }
+      .schedule-type-row { grid-template-columns: 1fr; }
+      .todo-input-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -156,34 +178,32 @@
       <section class="tab-panel" data-panel="todo">
         <div class="panel">
           <div class="panel-head"><h2>代辦</h2><span class="badge" id="todoCount">0 筆</span></div>
+          <div class="todo-finish-bar">
+            <label class="checkline"><input id="todoSelectAll" type="checkbox">全選</label>
+            <button class="primary" type="button" id="finishSelectedButton" disabled>完成所選</button>
+          </div>
           <div class="list" id="todoList"></div>
         </div>
       </section>
 
       <section class="tab-panel" data-panel="add">
         <div class="panel">
-          <div class="panel-head"><h2>新增多筆行程</h2><button class="ghost" type="button" id="addScheduleRowButton">加一筆</button></div>
+          <div class="panel-head">
+            <h2>新增行程</h2>
+            <button class="ghost" type="button" id="addScheduleRowButton">加一筆</button>
+          </div>
           <form id="scheduleForm">
             <div class="rows" id="scheduleRows"></div>
+            <p class="form-hint">每一筆可選「單日」或「固定」。選固定時會改成選星期。</p>
             <div class="button-row" style="margin-top:10px"><button class="primary" type="submit">新增行程</button></div>
           </form>
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h2>新增固定行程</h2></div>
-          <form id="weeklyForm" class="form-grid">
-            <label><span>星期</span><select id="weeklyWeekday"><option value="一">週一</option><option value="二">週二</option><option value="三">週三</option><option value="四">週四</option><option value="五">週五</option><option value="六">週六</option><option value="日">週日</option></select></label>
-            <label><span>開始</span><input id="weeklyStart" type="text" inputmode="numeric" placeholder="0900" required></label>
-            <label><span>結束</span><input id="weeklyEnd" type="text" inputmode="numeric" placeholder="1200" required></label>
-            <label class="wide"><span>標題</span><input id="weeklyTitle" type="text" placeholder="物理課" required></label>
-            <button class="primary wide" type="submit">新增固定</button>
-          </form>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><h2>新增多筆代辦</h2></div>
+          <div class="panel-head"><h2>新增代辦</h2></div>
           <form id="todoForm">
-            <textarea id="todoInput" placeholder="每行一筆代辦&#10;例如：&#10;買早餐&#10;交作業"></textarea>
+            <div class="rows" id="todoRows"></div>
+            <p class="form-hint">填完最後一格後會自動新增下一格；送出時會忽略空白格。</p>
             <button class="primary" style="width:100%;margin-top:8px" type="submit">新增代辦</button>
           </form>
         </div>
@@ -225,7 +245,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const LIFF_ID = '2010253113-y5SwOmBb';
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyI8OXq5xhR9IEsJW5b6ISIZhYDRrij0xDCYTvKE8rrqgNx7gWIePpEIpkP-Ndddtl1Yg/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxZTQTvV3WTgwwfqEEy0Im3VYfRgvaKLfmNwG-gR0cjr_AvcUkQ8bwMgzUbYRtrbFznDw/exec';
     const TAB_TITLES = { schedule: '行程', todo: '代辦', add: '新增', weekly: '固定' };
 
     let currentDateText = '';
@@ -234,6 +254,7 @@
     let latestData = null;
     let lineAccessToken = '';
     let storageKey = 'line_bot_liff_ui_cache';
+    let selectedTodoIds = new Set();
 
     const $ = (id) => document.getElementById(id);
 
@@ -244,6 +265,7 @@
         button.disabled = value;
       });
       $('statusText').textContent = text || (value ? '更新中' : '已同步');
+      if (typeof updateTodoSelectionBar === 'function') updateTodoSelectionBar();
     }
 
     function showError(message) {
@@ -449,23 +471,61 @@
     function renderTodos(todos) {
       const list = $('todoList');
       list.innerHTML = '';
-      if (todos.length === 0) { list.innerHTML = '<div class="empty">目前沒有未完成代辦</div>'; return; }
+
+      const visibleIds = new Set((todos || []).map(todo => String(todo.id)));
+      selectedTodoIds = new Set([...selectedTodoIds].filter(id => visibleIds.has(String(id))));
+
+      if (!todos || todos.length === 0) {
+        selectedTodoIds.clear();
+        updateTodoSelectionBar();
+        list.innerHTML = '<div class="empty">目前沒有未完成代辦</div>';
+        return;
+      }
+
       todos.forEach(todo => {
+        const id = String(todo.id);
         const item = document.createElement('div');
-        item.className = 'item';
+        item.className = 'item todo-item';
         item.innerHTML = `
+          <input class="todo-check" type="checkbox" aria-label="選取代辦" ${selectedTodoIds.has(id) ? 'checked' : ''}>
           <div class="item-main">
             <div class="item-title">${todo.number}. ${escapeHtml(todo.text)}</div>
             <div class="item-meta">${escapeHtml(todo.createdAt)}</div>
-          </div>
-          <div class="item-actions"></div>`;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = '完成';
-        button.addEventListener('click', () => { if (!isBusy) apiRequest('uiFinishTodo', { todoId: todo.id, dateText: currentDateText }); });
-        item.querySelector('.item-actions').appendChild(button);
+          </div>`;
+
+        const checkbox = item.querySelector('.todo-check');
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) selectedTodoIds.add(id);
+          else selectedTodoIds.delete(id);
+          updateTodoSelectionBar();
+        });
+
+        item.addEventListener('click', event => {
+          if (event.target === checkbox) return;
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        });
+
         list.appendChild(item);
       });
+
+      updateTodoSelectionBar();
+    }
+
+    function updateTodoSelectionBar() {
+      const button = $('finishSelectedButton');
+      const selectAll = $('todoSelectAll');
+      const count = selectedTodoIds.size;
+      if (button) {
+        button.disabled = isBusy || count === 0;
+        button.textContent = count > 0 ? `完成所選（${count}）` : '完成所選';
+      }
+      if (selectAll) {
+        const checks = Array.from(document.querySelectorAll('.todo-check'));
+        const checked = checks.filter(check => check.checked).length;
+        selectAll.checked = checks.length > 0 && checked === checks.length;
+        selectAll.indeterminate = checked > 0 && checked < checks.length;
+      }
     }
 
     function renderWeekly(weekly) {
@@ -495,26 +555,77 @@
       row.className = 'row-card';
       row.innerHTML = `
         <div class="form-grid">
-          <label><span>日期</span><input class="schedule-date" type="date" value="${escapeHtml(values.date || toInputDate(currentDateText))}"></label>
+          <div class="schedule-type-row wide">
+            <label><span>類型</span><select class="schedule-type"><option value="ONCE">單日</option><option value="WEEKLY">固定</option></select></label>
+            <label class="schedule-date-wrap"><span>日期</span><input class="schedule-date" type="date" value="${escapeHtml(values.date || toInputDate(currentDateText))}"></label>
+            <label class="schedule-weekday-wrap hidden"><span>星期</span><select class="schedule-weekday"><option value="一">週一</option><option value="二">週二</option><option value="三">週三</option><option value="四">週四</option><option value="五">週五</option><option value="六">週六</option><option value="日">週日</option></select></label>
+          </div>
           <label><span>開始</span><input class="schedule-start" type="text" inputmode="numeric" placeholder="0900" value="${escapeHtml(values.startTime || '')}" required></label>
           <label><span>結束</span><input class="schedule-end" type="text" inputmode="numeric" placeholder="1200" value="${escapeHtml(values.endTime || '')}" required></label>
           <label class="wide"><span>標題</span><input class="schedule-title" type="text" placeholder="上班" value="${escapeHtml(values.title || '')}" required></label>
           <button class="ghost wide remove-row" type="button">移除此筆</button>
         </div>`;
-      row.querySelector('.remove-row').addEventListener('click', () => { if ($('scheduleRows').children.length > 1) row.remove(); });
+
+      const typeSelect = row.querySelector('.schedule-type');
+      const dateWrap = row.querySelector('.schedule-date-wrap');
+      const weekdayWrap = row.querySelector('.schedule-weekday-wrap');
+      typeSelect.value = values.type || 'ONCE';
+
+      function syncType() {
+        const isWeekly = typeSelect.value === 'WEEKLY';
+        dateWrap.classList.toggle('hidden', isWeekly);
+        weekdayWrap.classList.toggle('hidden', !isWeekly);
+      }
+
+      typeSelect.addEventListener('change', syncType);
+      row.querySelector('.remove-row').addEventListener('click', () => {
+        if ($('scheduleRows').children.length > 1) row.remove();
+      });
+      syncType();
       $('scheduleRows').appendChild(row);
     }
 
     function collectScheduleRows() {
-      return Array.from(document.querySelectorAll('#scheduleRows .row-card')).map(row => ({
-        date: toDateText(row.querySelector('.schedule-date').value),
-        startTime: row.querySelector('.schedule-start').value,
-        endTime: row.querySelector('.schedule-end').value,
-        title: row.querySelector('.schedule-title').value
-      }));
+      return Array.from(document.querySelectorAll('#scheduleRows .row-card'))
+        .map(row => ({
+          type: row.querySelector('.schedule-type').value,
+          date: toDateText(row.querySelector('.schedule-date').value),
+          weekday: row.querySelector('.schedule-weekday').value,
+          startTime: row.querySelector('.schedule-start').value,
+          endTime: row.querySelector('.schedule-end').value,
+          title: row.querySelector('.schedule-title').value
+        }))
+        .filter(row => row.startTime.trim() || row.endTime.trim() || row.title.trim());
     }
 
     function resetScheduleRows() { $('scheduleRows').innerHTML = ''; addScheduleRow(); }
+
+    function addTodoInputRow(value = '') {
+      const row = document.createElement('div');
+      row.className = 'todo-input-row';
+      row.innerHTML = `
+        <input class="todo-input" type="text" placeholder="輸入代辦" value="${escapeHtml(value)}">
+        <button class="ghost remove-todo-row" type="button">移除</button>`;
+      const input = row.querySelector('.todo-input');
+      input.addEventListener('input', () => {
+        const rows = Array.from(document.querySelectorAll('#todoRows .todo-input-row'));
+        if (rows[rows.length - 1] === row && input.value.trim()) {
+          addTodoInputRow();
+        }
+      });
+      row.querySelector('.remove-todo-row').addEventListener('click', () => {
+        if ($('todoRows').children.length > 1) row.remove();
+      });
+      $('todoRows').appendChild(row);
+    }
+
+    function collectTodoItems() {
+      return Array.from(document.querySelectorAll('#todoRows .todo-input'))
+        .map(input => input.value.trim())
+        .filter(Boolean);
+    }
+
+    function resetTodoRows() { $('todoRows').innerHTML = ''; addTodoInputRow(); }
 
     function conflictText(conflictResponse) {
       const lines = [conflictResponse.message || '有時間重疊，是否仍要繼續？', ''];
@@ -558,15 +669,39 @@
       $('refreshButton').addEventListener('click', () => load(currentDateText, { forceRefresh: true }));
       $('dateInput').addEventListener('change', event => load(toDateText(event.target.value), { forceRefresh: true }));
       $('addScheduleRowButton').addEventListener('click', () => addScheduleRow());
+      $('todoSelectAll').addEventListener('change', event => {
+        const checked = event.target.checked;
+        document.querySelectorAll('.todo-check').forEach(check => {
+          check.checked = checked;
+          const item = check.closest('.todo-item');
+          const title = item ? item.querySelector('.item-title') : null;
+          const idText = title ? '' : '';
+        });
+        selectedTodoIds = new Set();
+        if (checked && latestData && latestData.todos) {
+          latestData.todos.forEach(todo => selectedTodoIds.add(String(todo.id)));
+        }
+        document.querySelectorAll('.todo-check').forEach(check => { check.checked = checked; });
+        updateTodoSelectionBar();
+      });
+      $('finishSelectedButton').addEventListener('click', () => {
+        if (isBusy || selectedTodoIds.size === 0) return;
+        const todoIds = [...selectedTodoIds];
+        apiRequest('uiFinishTodos', { todoIds, dateText: currentDateText }).then(data => {
+          if (!data) return;
+          selectedTodoIds.clear();
+          updateTodoSelectionBar();
+        });
+      });
       $('closeEditButton').addEventListener('click', closeEditModal);
       $('editModal').addEventListener('click', event => { if (event.target === $('editModal')) closeEditModal(); });
 
       $('todoForm').addEventListener('submit', event => {
         event.preventDefault();
-        const input = $('todoInput');
-        apiRequest('uiAddTodos', { rawText: input.value, dateText: currentDateText }).then(data => {
+        const items = collectTodoItems();
+        apiRequest('uiAddTodos', { rawText: items.join('\n'), dateText: currentDateText }).then(data => {
           if (!data || data.conflict) return;
-          input.value = '';
+          resetTodoRows();
           switchTab('todo');
         });
       });
@@ -574,33 +709,46 @@
       $('scheduleForm').addEventListener('submit', async event => {
         event.preventDefault();
         const rows = collectScheduleRows();
-        const result = await apiRequest('uiAddSchedules', { rows, forceConflict: false });
-        if (result && result.conflict) {
-          const confirmed = window.confirm(conflictText(result));
-          if (!confirmed) return;
-          const forced = await apiRequest('uiAddSchedules', { rows, forceConflict: true });
-          if (!forced || forced.conflict) return;
-        } else if (!result) {
+        const onceRows = rows
+          .filter(row => row.type === 'ONCE')
+          .map(row => ({ date: row.date, startTime: row.startTime, endTime: row.endTime, title: row.title }));
+        const weeklyRows = rows.filter(row => row.type === 'WEEKLY');
+
+        let lastResult = null;
+
+        if (onceRows.length > 0) {
+          const result = await apiRequest('uiAddSchedules', { rows: onceRows, forceConflict: false });
+          if (result && result.conflict) {
+            const confirmed = window.confirm(conflictText(result));
+            if (!confirmed) return;
+            const forced = await apiRequest('uiAddSchedules', { rows: onceRows, forceConflict: true });
+            if (!forced || forced.conflict) return;
+            lastResult = forced;
+          } else if (!result) {
+            return;
+          } else {
+            lastResult = result;
+          }
+        }
+
+        for (const row of weeklyRows) {
+          const result = await apiRequest('uiAddWeeklySchedule', {
+            weekdayInput: row.weekday,
+            startInput: row.startTime,
+            endInput: row.endTime,
+            titleInput: row.title
+          });
+          if (!result || result.conflict) return;
+          lastResult = result;
+        }
+
+        if (!lastResult && rows.length === 0) {
+          showError('請至少填寫一筆行程。');
           return;
         }
-        resetScheduleRows();
-        switchTab('schedule');
-      });
 
-      $('weeklyForm').addEventListener('submit', event => {
-        event.preventDefault();
-        apiRequest('uiAddWeeklySchedule', {
-          weekdayInput: $('weeklyWeekday').value,
-          startInput: $('weeklyStart').value,
-          endInput: $('weeklyEnd').value,
-          titleInput: $('weeklyTitle').value
-        }).then(data => {
-          if (!data || data.conflict) return;
-          $('weeklyStart').value = '';
-          $('weeklyEnd').value = '';
-          $('weeklyTitle').value = '';
-          switchTab('weekly');
-        });
+        resetScheduleRows();
+        switchTab(weeklyRows.length > 0 && onceRows.length === 0 ? 'weekly' : 'schedule');
       });
 
       $('editForm').addEventListener('submit', async event => {
@@ -631,6 +779,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       bindEvents();
       resetScheduleRows();
+      resetTodoRows();
       const ready = await initializeLiff();
       if (!ready) return;
       const cached = loadLocalData();
