@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -20,8 +21,13 @@
       --shadow: 0 8px 20px rgba(29, 39, 43, 0.07);
       --bottom-nav-height: 74px;
     }
-    * { box-sizing: border-box; }
-    html, body {
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
       min-height: 100%;
       margin: 0;
       background: var(--bg);
@@ -29,7 +35,14 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 16px;
     }
-    button, input, textarea, select { font: inherit; }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
     button {
       min-height: 44px;
       border: 1px solid var(--line);
@@ -41,11 +54,33 @@
       white-space: nowrap;
       touch-action: manipulation;
     }
-    button.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
-    button.danger { border-color: #f3b4af; background: var(--danger-soft); color: var(--danger); }
-    button.ghost { background: var(--surface-2); border-color: var(--surface-2); color: var(--muted); }
-    button:disabled { cursor: wait; opacity: 0.62; }
-    input, textarea, select {
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.danger {
+      border-color: #f3b4af;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    button.ghost {
+      background: var(--surface-2);
+      border-color: var(--surface-2);
+      color: var(--muted);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+
+    input,
+    textarea,
+    select {
       width: 100%;
       min-height: 44px;
       border: 1px solid var(--line);
@@ -54,89 +89,514 @@
       color: var(--ink);
       padding: 9px 11px;
     }
-    textarea { min-height: 108px; resize: vertical; }
-    label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
-    .app { min-height: 100vh; padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)); }
-    .topbar { position: sticky; top: 0; z-index: 5; background: rgba(245,247,244,.95); border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); }
-    .topbar-inner { max-width: 760px; margin: 0 auto; padding: 10px 14px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; }
-    .identity { min-width: 0; }
-    .identity h1 { margin: 0; font-size: 18px; line-height: 1.2; }
-    .identity p { margin: 3px 0 0; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sync { min-width: 62px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 12px; padding: 5px 9px; text-align: center; }
-    main { max-width: 760px; margin: 0 auto; padding: 12px 12px 18px; }
-    .error { display: none; margin-bottom: 10px; border: 1px solid #f3b4af; border-radius: 8px; background: var(--danger-soft); color: var(--danger); padding: 10px 12px; overflow-wrap: anywhere; white-space: pre-wrap; }
-    .error.show { display: block; }
-    .date-strip { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
-    .quick-row, .button-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-    .quick-row::-webkit-scrollbar, .button-row::-webkit-scrollbar { display: none; }
-    .quick-row button { min-width: 68px; }
-    .summary-scroll { display: flex; gap: 8px; overflow-x: auto; margin: 0 -12px 12px; padding: 0 12px 2px; scroll-snap-type: x proximity; scrollbar-width: none; }
-    .summary-scroll::-webkit-scrollbar { display: none; }
-    .metric { flex: 0 0 118px; min-height: 68px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); padding: 11px; scroll-snap-align: start; }
-    .metric span { display: block; color: var(--muted); font-size: 12px; }
-    .metric strong { display: block; margin-top: 5px; font-size: 20px; line-height: 1.1; }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-    .panel, .row-card, .item { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
-    .panel { padding: 12px; margin-bottom: 12px; }
-    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-    .panel h2 { margin: 0; font-size: 16px; line-height: 1.2; }
-    .badge { display: inline-flex; align-items: center; min-height: 24px; max-width: 58%; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 12px; padding: 2px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .list, .rows { display: grid; gap: 8px; }
-    .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; box-shadow: none; padding: 10px; }
-    .item-main { min-width: 0; }
-    .item-title { font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }
-    .item-meta { margin-top: 4px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-    .item-actions { display: flex; gap: 6px; }
-    .item-actions button { min-width: 52px; padding-left: 10px; padding-right: 10px; }
-    .empty { border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); padding: 18px; text-align: center; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .form-grid .wide { grid-column: 1 / -1; }
-    .row-card { box-shadow: none; padding: 10px; }
-    .bottom-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 10; height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(255,255,255,.97); backdrop-filter: blur(14px); padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
-    .bottom-nav-inner { max-width: 760px; height: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; }
-    .tab-button { min-width: 0; min-height: 54px; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; gap: 2px; padding: 6px 2px; white-space: normal; }
-    .tab-button strong, .tab-button span { display: block; width: 100%; text-align: center; }
-    .tab-button strong { font-size: 18px; line-height: 1; }
-    .tab-button span { font-size: 12px; line-height: 1.1; }
-    .tab-button.active { border-radius: 8px; background: var(--accent-soft); color: var(--accent); }
-    .modal { position: fixed; inset: 0; z-index: 20; display: none; align-items: flex-end; background: rgba(29,39,43,.32); padding: 14px 12px calc(14px + env(safe-area-inset-bottom)); }
-    .modal.show { display: flex; }
-    .modal-card { width: min(100%,760px); max-height: 88vh; margin: 0 auto; overflow: auto; border-radius: 12px; background: var(--surface); box-shadow: 0 18px 48px rgba(29,39,43,.22); padding: 14px; }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-    .modal-head h2 { margin: 0; font-size: 17px; }
 
-    .mobile-actions { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    .todo-toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .checkline { display: inline-flex; grid-auto-flow: column; grid-template-columns: auto auto; align-items: center; gap: 7px; min-height: 44px; color: var(--muted); font-size: 14px; }
-    .checkline input, .todo-check { width: 20px; min-height: 20px; height: 20px; accent-color: var(--accent); }
-    .todo-item { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
-    .todo-item .item-main { padding-top: 1px; }
-    .todo-finish-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-    .todo-finish-bar button { min-width: 112px; }
-    .schedule-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .hidden { display: none !important; }
-    .todo-input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-    .todo-input-row button { min-width: 52px; }
-    .form-hint { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(245, 247, 244, .95);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .identity {
+      min-width: 0;
+    }
+
+    .identity h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .identity p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sync {
+      min-width: 62px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 5px 9px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px 12px 18px;
+    }
+
+    .error {
+      display: none;
+      margin-bottom: 10px;
+      border: 1px solid #f3b4af;
+      border-radius: 8px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      padding: 10px 12px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .date-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .quick-row,
+    .button-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-row::-webkit-scrollbar,
+    .button-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-row button {
+      min-width: 68px;
+    }
+
+    .summary-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 0 -12px 12px;
+      padding: 0 12px 2px;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+    }
+
+    .summary-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .metric {
+      flex: 0 0 118px;
+      min-height: 68px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 11px;
+      scroll-snap-align: start;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .panel,
+    .row-card,
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      max-width: 58%;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 2px 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list,
+    .rows {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      box-shadow: none;
+      padding: 10px;
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-title {
+      font-weight: 650;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .item-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .item-actions button {
+      min-width: 52px;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .row-card {
+      box-shadow: none;
+      padding: 10px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 10;
+      height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, .97);
+      backdrop-filter: blur(14px);
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav-inner {
+      max-width: 760px;
+      height: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .tab-button {
+      min-width: 0;
+      min-height: 54px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 6px 2px;
+      white-space: normal;
+    }
+
+    .tab-button strong,
+    .tab-button span {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .tab-button strong {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tab-button span {
+      font-size: 12px;
+      line-height: 1.1;
+    }
+
+    .tab-button.active {
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: flex-end;
+      background: rgba(29, 39, 43, .32);
+      padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(100%, 760px);
+      max-height: 88vh;
+      margin: 0 auto;
+      overflow: auto;
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 18px 48px rgba(29, 39, 43, .22);
+      padding: 14px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .mobile-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .todo-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .checkline {
+      display: inline-flex;
+      grid-auto-flow: column;
+      grid-template-columns: auto auto;
+      align-items: center;
+      gap: 7px;
+      min-height: 44px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .checkline input,
+    .todo-check {
+      width: 20px;
+      min-height: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+    }
+
+    .todo-item {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .todo-item .item-main {
+      padding-top: 1px;
+    }
+
+    .todo-finish-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .todo-finish-bar button {
+      min-width: 112px;
+    }
+
+    .schedule-type-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .todo-input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .todo-input-row button {
+      min-width: 52px;
+    }
+
+    .form-hint {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
 
     @media (max-width: 430px) {
-      .date-strip { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; }
-      .item { grid-template-columns: 1fr; }
-      .item-actions, .item-actions button { width: 100%; }
-      .item-actions button { flex: 1; }
-      .metric { flex-basis: 106px; }
-      main { padding-left: 10px; padding-right: 10px; }
-      .panel { padding: 11px; }
-      .todo-toolbar, .todo-finish-bar { align-items: stretch; }
-      .todo-finish-bar { flex-direction: column; }
-      .todo-finish-bar button { width: 100%; }
-      .schedule-type-row { grid-template-columns: 1fr; }
-      .todo-input-row { grid-template-columns: 1fr; }
+      .date-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .item-actions,
+      .item-actions button {
+        width: 100%;
+      }
+
+      .item-actions button {
+        flex: 1;
+      }
+
+      .metric {
+        flex-basis: 106px;
+      }
+
+      main {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .panel {
+        padding: 11px;
+      }
+
+      .todo-toolbar,
+      .todo-finish-bar {
+        align-items: stretch;
+      }
+
+      .todo-finish-bar {
+        flex-direction: column;
+      }
+
+      .todo-finish-bar button {
+        width: 100%;
+      }
+
+      .schedule-type-row {
+        grid-template-columns: 1fr;
+      }
+
+      .todo-input-row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <header class="topbar">
@@ -170,14 +630,18 @@
 
       <section class="tab-panel active" data-panel="schedule">
         <div class="panel">
-          <div class="panel-head"><h2 id="scheduleTitle">行程</h2><span class="badge" id="dayStatus">-</span></div>
+          <div class="panel-head">
+            <h2 id="scheduleTitle">行程</h2><span class="badge" id="dayStatus">-</span>
+          </div>
           <div class="list" id="scheduleList"></div>
         </div>
       </section>
 
       <section class="tab-panel" data-panel="todo">
         <div class="panel">
-          <div class="panel-head"><h2>代辦</h2><span class="badge" id="todoCount">0 筆</span></div>
+          <div class="panel-head">
+            <h2>代辦</h2><span class="badge" id="todoCount">0 筆</span>
+          </div>
           <div class="todo-finish-bar">
             <label class="checkline"><input id="todoSelectAll" type="checkbox">全選</label>
             <button class="primary" type="button" id="finishSelectedButton" disabled>完成所選</button>
@@ -200,7 +664,9 @@
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h2>新增代辦</h2></div>
+          <div class="panel-head">
+            <h2>新增代辦</h2>
+          </div>
           <form id="todoForm">
             <div class="rows" id="todoRows"></div>
             <p class="form-hint">填完最後一格後會自動新增下一格；送出時會忽略空白格。</p>
@@ -211,7 +677,9 @@
 
       <section class="tab-panel" data-panel="weekly">
         <div class="panel">
-          <div class="panel-head"><h2>固定行程</h2></div>
+          <div class="panel-head">
+            <h2>固定行程</h2>
+          </div>
           <div class="list" id="weeklyList"></div>
         </div>
       </section>
@@ -229,11 +697,21 @@
 
   <div class="modal" id="editModal" role="dialog" aria-modal="true">
     <div class="modal-card">
-      <div class="modal-head"><h2 id="editTitle">修改行程</h2><button class="ghost" type="button" id="closeEditButton">關閉</button></div>
+      <div class="modal-head">
+        <h2 id="editTitle">修改行程</h2><button class="ghost" type="button" id="closeEditButton">關閉</button>
+      </div>
       <form id="editForm" class="form-grid">
         <input id="editId" type="hidden"><input id="editType" type="hidden">
         <label id="editDateWrap"><span>日期</span><input id="editDate" type="date"></label>
-        <label id="editWeekdayWrap"><span>星期</span><select id="editWeekday"><option value="一">週一</option><option value="二">週二</option><option value="三">週三</option><option value="四">週四</option><option value="五">週五</option><option value="六">週六</option><option value="日">週日</option></select></label>
+        <label id="editWeekdayWrap"><span>星期</span><select id="editWeekday">
+            <option value="一">週一</option>
+            <option value="二">週二</option>
+            <option value="三">週三</option>
+            <option value="四">週四</option>
+            <option value="五">週五</option>
+            <option value="六">週六</option>
+            <option value="日">週日</option>
+          </select></label>
         <label><span>開始</span><input id="editStart" type="text" inputmode="numeric" placeholder="0900" required></label>
         <label><span>結束</span><input id="editEnd" type="text" inputmode="numeric" placeholder="1200" required></label>
         <label class="wide"><span>標題</span><input id="editName" type="text" required></label>
@@ -277,11 +755,11 @@
     function toInputDate(dateText) { return String(dateText || '').replaceAll('/', '-'); }
     function toDateText(inputDate) { return String(inputDate || '').replaceAll('-', '/'); }
     function compactTime(timeText) { return String(timeText || '').replace(':', ''); }
-    function weekdayValue(value) { const map = ['日','一','二','三','四','五','六']; return map[Number(value)] || value || '一'; }
+    function weekdayValue(value) { const map = ['日', '一', '二', '三', '四', '五', '六']; return map[Number(value)] || value || '一'; }
     function shiftedDate(days) {
       const date = new Date();
       date.setDate(date.getDate() + days);
-      return `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')}`;
+      return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
     }
 
     function switchTab(tabName) {
@@ -376,8 +854,11 @@
         });
 
         script.onerror = () => {
-          cleanup();
-          reject(new Error('API 載入失敗。請檢查 API_URL 是否正確，或 Web App 是否允許 Anyone 存取。'));
+          reject(new Error(
+            'API 載入失敗\n' +
+            'action=' + action + '\n' +
+            'API_URL=' + API_URL
+          ));
         };
         script.src = `${apiUrl}?${query.toString()}`;
         document.body.appendChild(script);
@@ -793,4 +1274,5 @@
     });
   </script>
 </body>
+
 </html>
